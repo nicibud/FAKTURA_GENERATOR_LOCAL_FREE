@@ -237,6 +237,9 @@
   table.items tbody tr{break-inside:avoid; page-break-inside:avoid;}
   table.items td .field{margin:0; padding:5px 6px;}
   table.items td .field.num{text-align:right;}
+  table.items td.c-desc{vertical-align:top;}
+  table.items textarea.f-desc{min-height:0; white-space:pre-wrap; overflow-wrap:anywhere;}
+  .f-desc-print{display:none; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.5;}
   td.row-total{font-weight:600; white-space:nowrap;}
   td.row-del{text-align:center; padding-left:0; padding-right:0;}
   .del-btn{
@@ -406,6 +409,8 @@
     .field::placeholder{color:transparent !important;}
     input[type="date"]::-webkit-calendar-picker-indicator{display:none;}
     .footer-grid.note-off{grid-template-columns:1fr;}
+    table.items textarea.f-desc{display:none !important;}
+    .f-desc-print{display:block;}
     .totals-block, .footer-grid{break-inside:avoid; page-break-inside:avoid;}
     a{color:inherit; text-decoration:none;}
   }
@@ -647,7 +652,7 @@ function makeRow(data){
   data = data || {};
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td class="c-desc" data-label="Popis"><input type="text" class="field f-desc" placeholder="Popis práce nebo zboží"></td>
+    <td class="c-desc" data-label="Popis"><textarea class="field f-desc" rows="1" placeholder="Popis práce nebo zboží"></textarea><div class="f-desc-print"></div></td>
     <td class="c-qty num" data-label="Množ."><input type="text" inputmode="decimal" class="field f-qty num"></td>
     <td class="c-unit" data-label="MJ"><input type="text" class="field f-unit"></td>
     <td class="c-price num" data-label="Cena/MJ"><input type="text" inputmode="decimal" class="field f-price num"></td>
@@ -656,7 +661,11 @@ function makeRow(data){
     <td class="row-del"><button type="button" class="del-btn" title="Smazat položku" aria-label="Smazat položku">${ICON_X}</button></td>
   `;
   // hodnoty nastavujeme přes .value, aby uvozovky v popisu nerozbily HTML
-  tr.querySelector('.f-desc').value = data.desc || '';
+  const descEl = tr.querySelector('.f-desc');
+  const descPrint = tr.querySelector('.f-desc-print');
+  descEl.value = data.desc || '';
+  descPrint.textContent = descEl.value;
+  descEl.addEventListener('input', () => { descPrint.textContent = descEl.value; });
   tr.querySelector('.f-qty').value = numStr(data.qty !== undefined ? data.qty : 1);
   tr.querySelector('.f-unit').value = data.unit !== undefined ? data.unit : 'ks';
   tr.querySelector('.f-price').value = numStr(data.price !== undefined ? data.price : 0);
@@ -668,6 +677,7 @@ function makeRow(data){
 function addRow(data){
   const tr = makeRow(data);
   document.getElementById('itemsBody').appendChild(tr);
+  autosize(tr.querySelector('.f-desc'));
   return tr;
 }
 
